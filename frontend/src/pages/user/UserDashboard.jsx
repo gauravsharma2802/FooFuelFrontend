@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import {
   Box,
-  Container,
   Typography,
   AppBar,
   Toolbar,
@@ -12,33 +11,38 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  Avatar,
   Divider,
-  Chip,
-  Paper
+  Avatar
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  ShoppingCart as ShoppingCartIcon,
-  Person as PersonIcon,
-  ExitToApp as LogoutIcon,
+  Home as HomeIcon,
+  Fastfood as ProductsIcon,
   ShoppingBag as OrdersIcon,
-  Favorite as WishlistIcon,
-  Notifications as NotificationsIcon
+  Person as PersonIcon,
+  ExitToApp as LogoutIcon
 } from '@mui/icons-material';
+import Home from './Home';
+import Products from './Products';
+import Orders from './Orders';
+import Profile from './Profile';
+
+const menuItems = [
+  { text: 'Home', icon: <HomeIcon />, path: '/user/dashboard/home' },
+  { text: 'Products', icon: <ProductsIcon />, path: '/user/dashboard/products' },
+  { text: 'Orders', icon: <OrdersIcon />, path: '/user/dashboard/orders' },
+  { text: 'Profile', icon: <PersonIcon />, path: '/user/dashboard/profile' },
+];
 
 const UserDashboard = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('userData');
     navigate('/login');
   };
 
@@ -46,41 +50,67 @@ const UserDashboard = () => {
     setDrawerOpen(!drawerOpen);
   };
 
-  const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/user/dashboard' },
-    { text: 'My Orders', icon: <OrdersIcon />, path: '/user/orders' },
-    { text: 'Wishlist', icon: <WishlistIcon />, path: '/user/wishlist' },
-    { text: 'Profile', icon: <PersonIcon />, path: '/user/profile' },
-  ];
+  // Get user info from localStorage (placeholder fallback)
+  let user = { uname: 'User', uemail: 'user@example.com' };
+  try {
+    const userData = localStorage.getItem('userData');
+    if (userData) user = JSON.parse(userData);
+  } catch { /* ignore error, fallback to default user */ }
 
   const drawer = (
-    <Box sx={{ width: 250 }}>
+    <Box sx={{ width: 260, height: '100%', bgcolor: 'primary.main', color: 'white', display: 'flex', flexDirection: 'column' }}>
+      {/* Logo/Brand */}
+      <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'primary.dark', borderBottom: '1px solid #ffffff22' }}>
+        <Avatar sx={{ bgcolor: 'secondary.main', width: 48, height: 48, fontSize: 28 }}>🍔</Avatar>
+        <Typography variant="h6" fontWeight="bold" sx={{ letterSpacing: 1 }}>
+          Food Fuel
+        </Typography>
+      </Box>
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Avatar sx={{ bgcolor: 'primary.main' }}>
-          <PersonIcon />
+        <Avatar sx={{ bgcolor: 'white', color: 'primary.main' }}>
+          {user.uname ? user.uname[0] : 'U'}
         </Avatar>
         <Box>
-          <Typography variant="subtitle1" fontWeight="bold">
-            John Doe
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'white' }}>
+            {user.uname || 'User'}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            john.doe@example.com
+          <Typography variant="body2" sx={{ color: 'white', opacity: 0.8 }}>
+            {user.uemail || 'user@example.com'}
           </Typography>
         </Box>
       </Box>
-      <Divider />
-      <List>
+      <Divider sx={{ bgcolor: 'white', opacity: 0.2, my: 1 }} />
+      <List sx={{ flexGrow: 1 }}>
         {menuItems.map((item) => (
-          <ListItem button key={item.text}>
-            <ListItemIcon>{item.icon}</ListItemIcon>
+          <ListItem
+            button
+            key={item.text}
+            component={Link}
+            to={item.path}
+            onClick={() => setDrawerOpen(false)}
+            sx={{
+              my: 0.5,
+              borderRadius: 2,
+              bgcolor: location.pathname === item.path ? 'secondary.main' : 'inherit',
+              color: location.pathname === item.path ? 'primary.main' : 'white',
+              '&:hover': {
+                bgcolor: location.pathname === item.path ? 'secondary.main' : 'primary.light',
+                color: 'primary.main',
+              },
+              transition: 'all 0.2s',
+            }}
+          >
+            <ListItemIcon sx={{ color: location.pathname === item.path ? 'primary.main' : 'white' }}>
+              {item.icon}
+            </ListItemIcon>
             <ListItemText primary={item.text} />
           </ListItem>
         ))}
       </List>
-      <Divider />
+      <Divider sx={{ bgcolor: 'white', opacity: 0.2, my: 1 }} />
       <List>
-        <ListItem button onClick={handleLogout}>
-          <ListItemIcon>
+        <ListItem button onClick={handleLogout} sx={{ borderRadius: 2, color: 'white', '&:hover': { bgcolor: 'error.main', color: 'white' } }}>
+          <ListItemIcon sx={{ color: 'white' }}>
             <LogoutIcon />
           </ListItemIcon>
           <ListItemText primary="Logout" />
@@ -90,8 +120,8 @@ const UserDashboard = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f5f6fa' }}>
+      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, bgcolor: 'primary.main' }}>
         <Toolbar>
           <IconButton
             color="inherit"
@@ -102,12 +132,9 @@ const UserDashboard = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            E-Commerce Portal - User Dashboard
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, letterSpacing: 1 }}>
+            Food Fuel - User Dashboard
           </Typography>
-          <IconButton color="inherit">
-            <NotificationsIcon />
-          </IconButton>
         </Toolbar>
       </AppBar>
 
@@ -120,8 +147,20 @@ const UserDashboard = () => {
         }}
         sx={{
           display: { xs: 'block' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 250 },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 260 },
         }}
+      >
+        {drawer}
+      </Drawer>
+
+      {/* Permanent drawer for desktop */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 260, bgcolor: 'primary.main', color: 'white' },
+        }}
+        open
       >
         {drawer}
       </Drawer>
@@ -130,154 +169,23 @@ const UserDashboard = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - 250px)` },
-          mt: 8
+          p: { xs: 1, sm: 3 },
+          width: { sm: `calc(100% - 260px)` },
+          mt: 8,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-start',
         }}
       >
-        <Container maxWidth="lg">
-          <Typography variant="h4" gutterBottom>
-            Welcome back, John!
-          </Typography>
-          
-          <Grid container spacing={3}>
-            {/* Quick Stats */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Box>
-                      <Typography color="textSecondary" gutterBottom>
-                        Total Orders
-                      </Typography>
-                      <Typography variant="h4">
-                        12
-                      </Typography>
-                    </Box>
-                    <ShoppingCartIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Box>
-                      <Typography color="textSecondary" gutterBottom>
-                        Wishlist Items
-                      </Typography>
-                      <Typography variant="h4">
-                        8
-                      </Typography>
-                    </Box>
-                    <WishlistIcon sx={{ fontSize: 40, color: 'secondary.main' }} />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Box>
-                      <Typography color="textSecondary" gutterBottom>
-                        Pending Orders
-                      </Typography>
-                      <Typography variant="h4">
-                        3
-                      </Typography>
-                    </Box>
-                    <OrdersIcon sx={{ fontSize: 40, color: 'warning.main' }} />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Box>
-                      <Typography color="textSecondary" gutterBottom>
-                        Total Spent
-                      </Typography>
-                      <Typography variant="h4">
-                        $1,250
-                      </Typography>
-                    </Box>
-                    <Typography variant="h6" color="success.main">
-                      +15%
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Recent Orders */}
-            <Grid item xs={12} md={8}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Recent Orders
-                  </Typography>
-                  <Box sx={{ mt: 2 }}>
-                    {[
-                      { id: '#ORD-001', status: 'Delivered', date: '2024-01-15', amount: '$299' },
-                      { id: '#ORD-002', status: 'In Transit', date: '2024-01-14', amount: '$150' },
-                      { id: '#ORD-003', status: 'Processing', date: '2024-01-13', amount: '$89' },
-                    ].map((order) => (
-                      <Box key={order.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1, borderBottom: '1px solid #eee' }}>
-                        <Box>
-                          <Typography variant="subtitle2">{order.id}</Typography>
-                          <Typography variant="body2" color="text.secondary">{order.date}</Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Typography variant="subtitle2">{order.amount}</Typography>
-                          <Chip 
-                            label={order.status} 
-                            size="small"
-                            color={
-                              order.status === 'Delivered' ? 'success' :
-                              order.status === 'In Transit' ? 'warning' : 'info'
-                            }
-                          />
-                        </Box>
-                      </Box>
-                    ))}
-                  </Box>
-                  <Button variant="outlined" sx={{ mt: 2 }}>
-                    View All Orders
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Quick Actions */}
-            <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Quick Actions
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-                    <Button variant="contained" startIcon={<ShoppingCartIcon />}>
-                      Start Shopping
-                    </Button>
-                    <Button variant="outlined" startIcon={<OrdersIcon />}>
-                      Track Orders
-                    </Button>
-                    <Button variant="outlined" startIcon={<PersonIcon />}>
-                      Update Profile
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </Container>
+        <Box sx={{ width: '100%', maxWidth: 1100, mx: 'auto', bgcolor: 'white', borderRadius: 3, boxShadow: 3, p: { xs: 2, sm: 4 }, minHeight: '80vh' }}>
+          <Routes>
+            <Route path="home" element={<Home />} />
+            <Route path="products" element={<Products />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="*" element={<Navigate to="home" replace />} />
+          </Routes>
+        </Box>
       </Box>
     </Box>
   );
